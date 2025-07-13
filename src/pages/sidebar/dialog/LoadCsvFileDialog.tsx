@@ -82,7 +82,7 @@ export function LoadCsvFileDialog() {
               name="path"
               render={({ field }) => (
                 <FormItem className="flex items-center w-full">
-                  <FormLabel className="w-1/5 mr-2 mt-2 shrink-0">Csv path</FormLabel>
+                  <FormLabel className="w-1/8 mt-2">Csv path</FormLabel>
                   <FormControl className="flex-grow">
                     <div className="flex w-full items-center gap-1">
                       <Input {...field} className="w-full" />
@@ -110,7 +110,7 @@ export function LoadCsvFileDialog() {
               name="quote"
               render={({ field }) => (
                 <FormItem className="flex items-center w-full">
-                  <FormLabel className="w-1/5 mr-2 mt-2 shrink-0">Quote</FormLabel>
+                  <FormLabel className="w-1/8 mt-2">Quote</FormLabel>
                   <FormControl className="flex-grow">
                     <Input {...field} className="w-full" />
                   </FormControl>
@@ -123,7 +123,7 @@ export function LoadCsvFileDialog() {
               name="tableName"
               render={({ field }) => (
                 <FormItem className="flex items-center w-full">
-                  <FormLabel className="w-1/5 mr-2 mt-2 shrink-0">Table name</FormLabel>
+                  <FormLabel className="w-1/8 mt-2">Table name</FormLabel>
                   <FormControl className="flex-grow">
                     <Input {...field} className="w-full" />
                   </FormControl>
@@ -136,7 +136,7 @@ export function LoadCsvFileDialog() {
               name="allVarchar"
               render={({ field }) => (
                 <FormItem className="flex items-center w-full">
-                  <FormLabel className="w-1/5 mr-2 mt-2 shrink-0">All Varchar</FormLabel>
+                  <FormLabel className="w-1/8 mt-2">All Varchar</FormLabel>
                   <FormControl className="flex-grow">
                     <Select
                       onValueChange={field.onChange}
