@@ -320,7 +320,6 @@ export async function execute(
     data = await query(param as QueryParams);
   }
 
-  console.log('data:', data);
   if (data?.code == 401 && data?.message) {
     toast.warning(data?.message);
   }
@@ -338,9 +337,8 @@ export async function executeSQL(
   const func = ctx.hasLimit ? pagingQuery : query;
   const data = await func(param as QueryParams);
 
-  console.log('data:', data);
   if (data?.code == 401 && data?.message) {
-    // toast.warning(data?.message);
+    toast.warning(data?.message);
   }
   return data;
 }
@@ -362,7 +360,6 @@ export async function exportData(
       ...param,
     });
 
-    console.log('data:', data);
     if (data?.code == 401 && data?.message) {
       toast.warning(data?.message);
     }

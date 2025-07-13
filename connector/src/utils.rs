@@ -4,10 +4,9 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 use anyhow::{Result, anyhow};
-use arrow::array::*;
+use arrow::array::BooleanArray;
 use arrow::csv::WriterBuilder;
-use arrow::datatypes::SchemaRef;
-use arrow::datatypes::*;
+use arrow::datatypes::{DataType, SchemaRef};
 use arrow::ipc::writer::StreamWriter;
 use arrow::json::ReaderBuilder;
 use arrow::record_batch::RecordBatch;
@@ -43,6 +42,7 @@ impl TreeNode {
       comment: None,
     }
   }
+
   pub fn new_tables(key: &str, children: Option<Vec<TreeNode>>) -> Self {
     Self {
       name: "tables".to_string(),
@@ -162,14 +162,15 @@ pub fn build_tree(tables: Vec<Table>) -> Vec<TreeNode> {
   databases
 }
 
-pub fn write_csv(file: &str, batch: &RecordBatch) -> anyhow::Result<()> {
+pub fn write_csv(file: &str, batch: &RecordBatch) -> Result<()> {
   let file = File::create(file)?;
   let builder = WriterBuilder::new().with_header(true);
   let mut writer = builder.build(file);
   writer.write(batch)?;
   Ok(())
 }
-pub fn write_parquet(file: &str, batch: &RecordBatch) -> anyhow::Result<()> {
+
+pub fn write_parquet(file: &str, batch: &RecordBatch) -> Result<()> {
   let file = File::create(file)?;
   // WriterProperties can be used to set Parquet file options
   let props = WriterProperties::builder()
@@ -226,13 +227,12 @@ pub fn write_xlsx(file: &str, batch: &RecordBatch) -> Result<()> {
   // 3. 保存工作簿
   workbook
     .save(file)
-    .map_err(|e| anyhow!("Failed to save XLSX file: {}", e))?;
+    .map_err(|e| anyhow!("Failed to save XLSX file: {e}"))?;
 
-  println!("Successfully wrote data to {}", file);
   Ok(())
 }
 
-pub fn batch_write(file: &str, batch: &RecordBatch, format: &str) -> anyhow::Result<()> {
+pub fn batch_write(file: &str, batch: &RecordBatch, format: &str) -> Result<()> {
   if format == "csv" {
     write_csv(file, batch)?;
   } else if format == "parquet" {
@@ -248,7 +248,7 @@ pub fn date_to_days(t: &NaiveDate) -> i32 {
     .num_days() as i32
 }
 
-pub fn json_to_arrow<S: Serialize>(rows: &[S], schema: SchemaRef) -> anyhow::Result<RecordBatch> {
+pub fn json_to_arrow<S: Serialize>(rows: &[S], schema: SchemaRef) -> Result<RecordBatch> {
   let mut decoder = ReaderBuilder::new(schema).build_decoder()?;
   decoder.serialize(rows)?;
   let batch = decoder.flush()?.unwrap();

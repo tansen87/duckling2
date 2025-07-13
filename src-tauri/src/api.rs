@@ -1,6 +1,7 @@
-use connector::utils;
-use connector::utils::{RawArrowData, Title};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
+
+use connector::utils::{self, RawArrowData, Title};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ArrowResponse {
@@ -18,7 +19,7 @@ pub struct ArrowResponse {
 }
 
 impl ArrowResponse {
-  pub fn from_raw_data(res: anyhow::Result<RawArrowData>, elapsed: Option<u128>) -> ArrowResponse {
+  pub fn from_raw_data(res: Result<RawArrowData>, elapsed: Option<u128>) -> ArrowResponse {
     match res {
       Ok(raw) => match utils::serialize_preview(&raw.batch) {
         Ok(data) => ArrowResponse {

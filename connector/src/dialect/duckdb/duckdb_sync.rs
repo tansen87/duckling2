@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::Result;
 use arrow::array::RecordBatch;
 
 use crate::utils::{Metadata, RawArrowData};
@@ -35,13 +36,14 @@ impl DuckDbSyncConnection {
     Ok(())
   }
 
-  pub(crate) fn show_schema(&self, schema: &str) -> anyhow::Result<RecordBatch> {
+  pub(crate) fn show_schema(&self, schema: &str) -> Result<RecordBatch> {
     let sql = format!(
       "select * from information_schema.tables where table_schema='{schema}' order by table_type, table_name"
     );
     self.query_arrow(&sql)
   }
-  pub fn all_columns(&self) -> anyhow::Result<Vec<Metadata>> {
+
+  pub fn all_columns(&self) -> Result<Vec<Metadata>> {
     let sql = "
     select table_catalog, table_schema, table_name, column_name, data_type
     from information_schema.columns
@@ -51,10 +53,10 @@ impl DuckDbSyncConnection {
 
     let rows = stmt.query_map([], |row| {
       Ok((
-        row.get::<_, String>(0)?, // database
-        row.get::<_, String>(2)?, // table_name
-        row.get::<_, String>(3)?, // column_name
-        row.get::<_, String>(4)?, // column_type
+        row.get::<_, String>(0)?,  // database
+        row.get::<_, String>(2)?,  // table_name
+        row.get::<_, String>(3)?,  // column_name
+        row.get::<_, String>(4)?,  // column_type
       ))
     })?;
 
@@ -78,7 +80,7 @@ impl DuckDbSyncConnection {
     Ok(metadata)
   }
 
-  pub fn drop_table(&self, table: &str) -> anyhow::Result<()> {
+  pub fn drop_table(&self, table: &str) -> Result<()> {
     let sql = format!("DROP VIEW IF EXISTS {table}");
     log::warn!("drop: {}", &sql);
     self.inner.execute(&sql, [])?;
@@ -88,12 +90,12 @@ impl DuckDbSyncConnection {
     Ok(())
   }
 
-  fn execute_batch(&self, sql: &str) -> anyhow::Result<()> {
+  fn execute_batch(&self, sql: &str) -> Result<()> {
     self.inner.execute_batch(sql)?;
     Ok(())
   }
 
-  pub fn get_tables(&self) -> anyhow::Result<Vec<Table>> {
+  pub fn get_tables(&self) -> Result<Vec<Table>> {
     let sql = r"
     select table_catalog, table_schema, table_name, table_type, if(table_type='VIEW', 'view', 'table') as type
     from information_schema.tables order by table_type, table_name";
@@ -116,7 +118,7 @@ impl DuckDbSyncConnection {
     Ok(tables)
   }
 
-  pub fn get_db(&self) -> anyhow::Result<TreeNode> {
+  pub fn get_db(&self) -> Result<TreeNode> {
     let tables = self.get_tables()?;
     Ok(TreeNode {
       name: get_file_name(&self.path),
@@ -128,7 +130,8 @@ impl DuckDbSyncConnection {
       comment: None,
     })
   }
-  pub fn query(&self, sql: &str) -> anyhow::Result<(Vec<Title>, RecordBatch)> {
+
+  pub fn query(&self, sql: &str) -> Result<(Vec<Title>, RecordBatch)> {
     let mut stmt = self.inner.prepare(sql)?;
     let frames = stmt.query_arrow(duckdb::params![])?;
     let schema = frames.get_schema();
@@ -147,7 +150,8 @@ impl DuckDbSyncConnection {
     let batch = arrow::compute::concat_batches(&schema, &records)?;
     Ok((titles, batch))
   }
-  pub fn query_arrow(&self, sql: &str) -> anyhow::Result<RecordBatch> {
+
+  pub fn query_arrow(&self, sql: &str) -> Result<RecordBatch> {
     let mut stmt = self.inner.prepare(sql)?;
     let frames = stmt.query_arrow(duckdb::params![])?;
     let schema = frames.get_schema();
@@ -156,15 +160,13 @@ impl DuckDbSyncConnection {
     Ok(batch)
   }
 
-  pub fn export(&self, sql: &str, file: &str, format: &str) -> anyhow::Result<()> {
+  pub fn export(&self, sql: &str, file: &str, format: &str) -> Result<()> {
     let _ = export(&self.inner, sql, file, format)?;
     Ok(())
   }
 }
 
-pub fn query(conn: &duckdb::Connection, sql: &str) -> anyhow::Result<RawArrowData> {
-  println!("sql: {sql}");
-
+pub fn query(conn: &duckdb::Connection, sql: &str) -> Result<RawArrowData> {
   let mut stmt = conn.prepare(sql)?;
   let frames = stmt.query_arrow([])?;
   let schema = frames.get_schema();
@@ -191,20 +193,17 @@ pub fn query(conn: &duckdb::Connection, sql: &str) -> anyhow::Result<RawArrowDat
   })
 }
 
-pub fn export(
-  conn: &duckdb::Connection,
-  sql: &str,
-  file: &str,
-  format: &str,
-) -> anyhow::Result<()> {
+pub fn export(conn: &duckdb::Connection, sql: &str, file: &str, format: &str) -> Result<()> {
   let sql = if format == "xlsx" {
     format!("INSTALL excel; LOAD excel; COPY ({sql}) TO '{file}' (FORMAT xlsx, HEADER true)")
-  } else {
+  } else if format == "csv" {
     format!("COPY ({sql}) TO '{file}' (DELIMITER '|', FORMAT {format})")
+  } else {
+    format!("COPY ({sql}) TO '{file}' (FORMAT {format})")
   };
-  let _ = conn.execute(&sql, [])?;
+  // let _ = conn.execute(&sql, [])?;
 
-  Ok(())
+  Ok(conn.execute_batch(&sql)?)
 }
 
 #[test]

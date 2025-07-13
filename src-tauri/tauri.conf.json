@@ -1,5 +1,5 @@
 {
-  "productName": "Duckling",
+  "productName": "duckling",
   "version": "../package.json",
   "identifier": "com.duckling.dev",
   "build": {
@@ -17,7 +17,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "Duckling",
+        "title": "DUCKLING",
         "label": "main",
         "width": 1000,
         "height": 800

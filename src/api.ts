@@ -37,8 +37,6 @@ export function convertArrow(arrowData: Array<number>, titles?: TitleType[]) {
 
   const data = table.toArray().map((item) => item.toJSON());
 
-  console.table([...data.slice(0, 10)]);
-  console.table(tableSchema);
   return {
     data,
     tableSchema,
@@ -108,14 +106,14 @@ export async function exportCsv(
     format?: 'csv' | 'parquet' | 'xlsx';
     dbId?: string;
   },
-): Promise<ResultType> {
+): Promise<ResultType | undefined> {
   const db = getDatabase(params.dbId ?? '');
   console.debug('params:', params);
-  const res = await invoke<ArrowResponse>('export', {
+  await invoke<ArrowResponse>('export', {
     ...params,
     dialect: db?.config,
   });
-  console.log(`export: ${res}`);
+  return undefined;
 }
 
 export type MetadataType = {
@@ -151,7 +149,7 @@ export async function getDB(dialect: DialectConfig): Promise<DBType> {
     defaultDatabase = colMeta[0].database;
   }
   const meta = convertMeta(colMeta);
-  console.log('tree:', tree, colMeta, meta);
+
   return {
     id: nanoid(),
     dialect: dialect.dialect,
@@ -175,7 +173,6 @@ export async function showColumns(
   table: string,
   dialect: DialectConfig,
 ): Promise<ResultType> {
-  console.log(table, dialect);
   const res = await invoke('show_column', { table, dialect });
   return convert(res as ArrowResponse);
 }
@@ -184,14 +181,12 @@ export async function dropTable(
   table: string,
   dialect: DialectConfig,
 ): Promise<ResultType> {
-  console.log(table, dialect);
   const res = await invoke('drop_table', { table, dialect });
   return convert(res as ArrowResponse);
 }
 
 export async function formatSQL(sql: string): Promise<string> {
   const res = await invoke<string>('format_sql', { sql });
-  console.log('format sql:', res);
   return res;
 }
 

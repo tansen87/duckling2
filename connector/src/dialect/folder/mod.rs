@@ -1,10 +1,11 @@
 use std::fs;
 use std::path::Path;
-use walkdir::{DirEntry, WalkDir};
 
+use anyhow::Result;
 use arrow::array::{Array, StringArray};
 use async_trait::async_trait;
 use glob::glob;
+use walkdir::WalkDir;
 
 use crate::dialect::Connection;
 use crate::dialect::duckdb::duckdb_sync;
@@ -18,27 +19,27 @@ pub struct FolderConnection {
 
 #[async_trait]
 impl Connection for FolderConnection {
-  async fn get_db(&self) -> anyhow::Result<TreeNode> {
+  async fn get_db(&self) -> Result<TreeNode> {
     directory_tree(&self.path).ok_or_else(|| anyhow::anyhow!("null"))
   }
 
-  async fn query(&self, sql: &str, limit: usize, offset: usize) -> anyhow::Result<RawArrowData> {
+  async fn query(&self, sql: &str, limit: usize, offset: usize) -> Result<RawArrowData> {
     let conn = self.connect()?;
     duckdb_sync::query(&conn, sql)
   }
 
   #[allow(clippy::unused_async)]
-  async fn query_count(&self, sql: &str) -> anyhow::Result<usize> {
+  async fn query_count(&self, sql: &str) -> Result<usize> {
     let conn = self.connect()?;
     let total = conn.query_row(sql, [], |row| row.get::<_, usize>(0))?;
     Ok(total)
   }
 
-  async fn all_columns(&self) -> anyhow::Result<Vec<Metadata>> {
+  async fn all_columns(&self) -> Result<Vec<Metadata>> {
     self._all_columns()
   }
 
-  async fn show_column(&self, _schema: Option<&str>, table: &str) -> anyhow::Result<RawArrowData> {
+  async fn show_column(&self, _schema: Option<&str>, table: &str) -> Result<RawArrowData> {
     let path = Path::new(table);
 
     let ext = path.extension().unwrap_or_default();
@@ -66,7 +67,7 @@ impl Connection for FolderConnection {
     self.query(&sql, 0, 0).await
   }
 
-  async fn drop_table(&self, _schema: Option<&str>, table: &str) -> anyhow::Result<String> {
+  async fn drop_table(&self, _schema: Option<&str>, table: &str) -> Result<String> {
     let path = Path::new(table);
     if path.is_dir() {
       fs::remove_dir_all(path)?;
@@ -75,7 +76,7 @@ impl Connection for FolderConnection {
     }
     Ok(String::new())
   }
-  async fn table_row_count(&self, table: &str, r#where: &str) -> anyhow::Result<usize> {
+  async fn table_row_count(&self, table: &str, r#where: &str) -> Result<usize> {
     let conn = self.connect()?;
     let sql = self._table_count_sql(table, r#where);
     let total = conn.query_row(&sql, [], |row| row.get::<_, u32>(0))?;
@@ -87,7 +88,7 @@ impl Connection for FolderConnection {
     name.to_string()
   }
 
-  async fn export(&self, sql: &str, file: &str, format: &str) -> anyhow::Result<()> {
+  async fn export(&self, sql: &str, file: &str, format: &str) -> Result<()> {
     let conn = self.connect()?;
 
     let _ = duckdb_sync::export(&conn, sql, file, format)?;
@@ -96,7 +97,7 @@ impl Connection for FolderConnection {
   }
 
   #[allow(clippy::unused_async)]
-  async fn find(&self, value: &str, table: &str) -> anyhow::Result<RawArrowData> {
+  async fn find(&self, value: &str, table: &str) -> Result<RawArrowData> {
     let path = Path::new(table);
 
     let ext = path.extension().unwrap_or_default();
@@ -162,13 +163,13 @@ impl FolderConnection {
     }
   }
 
-  fn connect(&self) -> anyhow::Result<duckdb::Connection> {
+  fn connect(&self) -> Result<duckdb::Connection> {
     let conn = duckdb::Connection::open_in_memory()?;
     conn.execute(&format!("SET file_search_path='{}'", self.path.clone()), [])?;
     Ok(conn)
   }
 
-  fn _all_columns(&self) -> anyhow::Result<Vec<Metadata>> {
+  fn _all_columns(&self) -> Result<Vec<Metadata>> {
     let extensions = ["csv", "parquet", "xlsx"];
     // 遍历目录并过滤文件
     let files: Vec<_> = WalkDir::new(self.path.clone())

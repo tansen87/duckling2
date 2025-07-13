@@ -1,19 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::env;
+mod api;
+mod cmd;
 
-use cmd::OpenedFiles;
+use std::env;
 use std::path::PathBuf;
 use std::sync::Mutex;
+
 use tauri::Emitter;
 use tauri::menu::{CheckMenuItem, MenuBuilder, MenuItem, SubmenuBuilder};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::{DialogExt, FilePath};
 use tauri_plugin_log::{Target, TargetKind};
 
-mod api;
-mod cmd;
+use cmd::OpenedFiles;
 
 fn handle_menu(app: &mut tauri::App) -> tauri::Result<()> {
   let handle = app.handle();
