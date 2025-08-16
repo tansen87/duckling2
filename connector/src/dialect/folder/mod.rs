@@ -76,6 +76,7 @@ impl Connection for FolderConnection {
     }
     Ok(String::new())
   }
+
   async fn table_row_count(&self, table: &str, r#where: &str) -> Result<usize> {
     let conn = self.connect()?;
     let sql = self._table_count_sql(table, r#where);

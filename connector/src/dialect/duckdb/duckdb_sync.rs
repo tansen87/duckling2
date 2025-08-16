@@ -53,10 +53,10 @@ impl DuckDbSyncConnection {
 
     let rows = stmt.query_map([], |row| {
       Ok((
-        row.get::<_, String>(0)?,  // database
-        row.get::<_, String>(2)?,  // table_name
-        row.get::<_, String>(3)?,  // column_name
-        row.get::<_, String>(4)?,  // column_type
+        row.get::<_, String>(0)?, // database
+        row.get::<_, String>(2)?, // table_name
+        row.get::<_, String>(3)?, // column_name
+        row.get::<_, String>(4)?, // column_type
       ))
     })?;
 
