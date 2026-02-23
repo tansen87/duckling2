@@ -177,7 +177,7 @@ pub fn write_parquet(file: &str, batch: &RecordBatch) -> Result<()> {
     .set_compression(Compression::ZSTD(ZstdLevel::try_new(22)?))
     .build();
   let mut writer = ArrowWriter::try_new(file, batch.schema(), Some(props))?;
-  writer.write(&batch).expect("Writing batch");
+  writer.write(batch).expect("Writing batch");
   // writer must be closed to write footer
   writer.close()?;
 
