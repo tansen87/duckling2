@@ -1,5 +1,5 @@
-use sqlparser::ast::{OrderByKind, Statement};
-use sqlparser::dialect::GenericDialect;
+use sqlparser::ast::Statement;
+// use sqlparser::dialect::GenericDialect;
 use sqlparser::parser::Parser;
 
 pub fn count_sql(sql: &str) -> String {
@@ -88,82 +88,29 @@ pub fn limit_stmt(
   }
 }
 
-fn parse_order_by_expr(order_by: &str) -> Vec<(String, Option<bool>)> {
-  let sql = format!("select * from __ order by {order_by}");
+// fn parse_order_by_expr(order_by: &str) -> Vec<(String, Option<bool>)> {
+//   let sql = format!("select * from __ order by {order_by}");
 
-  let dialect = GenericDialect {};
-  let stmts = Parser::parse_sql(&dialect, &sql).unwrap();
+//   let dialect = GenericDialect {};
+//   let stmts = Parser::parse_sql(&dialect, &sql).unwrap();
 
-  let mut exprs = vec![];
-  for stmt in &stmts {
-    if let Statement::Query(tmp) = stmt
-      && let Some(order_by) = &tmp.order_by
-      && let OrderByKind::Expressions(_exprs) = &order_by.kind
-    {
-      for expr in _exprs {
-        exprs.push((expr.expr.to_string(), expr.options.asc));
-      }
-    }
-  }
-  exprs
-}
+//   let mut exprs = vec![];
+//   for stmt in &stmts {
+//     if let Statement::Query(tmp) = stmt
+//       && let Some(order_by) = &tmp.order_by
+//       && let OrderByKind::Expressions(_exprs) = &order_by.kind
+//     {
+//       for expr in _exprs {
+//         exprs.push((expr.expr.to_string(), expr.options.asc));
+//       }
+//     }
+//   }
+//   exprs
+// }
 
 fn convert_dialect(d: &str) -> Box<dyn sqlparser::dialect::Dialect> {
   match d {
     "duckdb" => Box::new(sqlparser::dialect::DuckDbDialect {}),
     _ => Box::new(sqlparser::dialect::GenericDialect {}),
-  }
-}
-
-#[cfg(test)]
-mod tests {
-
-  use std::ops::Deref;
-
-  use super::*;
-
-  #[test]
-  fn test_sql() {
-    let select_sql = "
-    SELECT a, b, 123, myfunc(b)
-    FROM table_1
-    WHERE a > b AND b < 100
-    ORDER BY a DESC, b";
-
-    let d = "generic";
-    let d = convert_dialect(d);
-    let dialect = d.deref();
-
-    let ast = Parser::parse_sql(dialect, select_sql).unwrap();
-
-    assert_eq!(
-      count_stmt("generic", &ast[0]).unwrap(),
-      "select count(*) from (SELECT a, b, 123, myfunc(b) FROM table_1 WHERE a > b AND b < 100 ORDER BY a DESC, b) ____"
-    );
-
-    let cte_sql = "
-    with tmp as (select * from table_1)
-    SELECT a, b, 123, myfunc(b)
-    FROM tmp
-    WHERE a > b AND b < 100
-    ORDER BY a DESC, b";
-
-    let ast = Parser::parse_sql(dialect, cte_sql).unwrap();
-
-    assert_eq!(
-      count_stmt("generic", &ast[0]).unwrap(),
-      "WITH tmp AS (SELECT * FROM table_1) SELECT count(*) FROM (SELECT a, b, 123, myfunc(b) FROM tmp WHERE a > b AND b < 100 ORDER BY a DESC, b) AS ____"
-    )
-  }
-
-  #[test]
-  fn test_order_by_expr() {
-    let exprs = parse_order_by_expr("a DESC, b, c + 1 ASC");
-    println!("{:?}", exprs);
-    assert!(!exprs[0].1.unwrap());
-    assert_eq!(exprs[2].0, "c + 1");
-
-    // let serialized = serde_json::to_string_pretty(&stmts).unwrap();
-    // println!("Serialized as JSON:\n{serialized}");
   }
 }

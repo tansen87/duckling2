@@ -35,7 +35,7 @@ impl Connection for FileConnection {
     })
   }
 
-  async fn query(&self, sql: &str, limit: usize, offset: usize) -> Result<RawArrowData> {
+  async fn query(&self, sql: &str, _limit: usize, _offset: usize) -> Result<RawArrowData> {
     let conn = self.connect()?;
     duckdb_sync::query(&conn, sql)
   }

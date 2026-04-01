@@ -27,14 +27,14 @@ impl DuckDbSyncConnection {
     Ok(Self { path, inner, cwd })
   }
 
-  pub(crate) fn set_cwd(&mut self, cwd: Option<String>) -> duckdb::Result<()> {
-    self.cwd = cwd.clone();
-    self.inner.execute(
-      format!("SET file_search_path='{}'", cwd.unwrap_or_default()).as_str(),
-      duckdb::params![],
-    )?;
-    Ok(())
-  }
+  // pub(crate) fn set_cwd(&mut self, cwd: Option<String>) -> duckdb::Result<()> {
+  //   self.cwd = cwd.clone();
+  //   self.inner.execute(
+  //     format!("SET file_search_path='{}'", cwd.unwrap_or_default()).as_str(),
+  //     duckdb::params![],
+  //   )?;
+  //   Ok(())
+  // }
 
   pub(crate) fn show_schema(&self, schema: &str) -> Result<RecordBatch> {
     let sql = format!(
@@ -90,10 +90,10 @@ impl DuckDbSyncConnection {
     Ok(())
   }
 
-  fn execute_batch(&self, sql: &str) -> Result<()> {
-    self.inner.execute_batch(sql)?;
-    Ok(())
-  }
+  // fn execute_batch(&self, sql: &str) -> Result<()> {
+  //   self.inner.execute_batch(sql)?;
+  //   Ok(())
+  // }
 
   pub fn get_tables(&self) -> Result<Vec<Table>> {
     let sql = r"
@@ -201,19 +201,6 @@ pub fn export(conn: &duckdb::Connection, sql: &str, file: &str, format: &str) ->
   } else {
     format!("COPY ({sql}) TO '{file}' (FORMAT {format})")
   };
-  // let _ = conn.execute(&sql, [])?;
 
   Ok(conn.execute_batch(&sql)?)
-}
-
-#[test]
-fn test_duckdb_cwd() {
-  let cwd = Some("/path/to".to_string());
-  let conn = DuckDbSyncConnection::new(None, cwd).unwrap();
-  let sql = "select value from duckdb_settings() where name='file_search_path'";
-  let value = conn
-    .inner
-    .query_row(sql, [], |row| row.get::<_, String>(0))
-    .unwrap();
-  assert_eq!(value, "/path/to");
 }

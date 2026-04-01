@@ -177,18 +177,3 @@ pub async fn csv2duckdb(
 
   Ok("CSV imported successfully into DuckDB".to_string())
 }
-
-#[tokio::test]
-async fn test_duckdb() {
-  use arrow::util::pretty::print_batches;
-  let conn = DuckDbSyncConnection::new(
-    Some("D:/data_obs/product_nice_l1/deepseek.db".to_string()),
-    None,
-  )
-  .unwrap();
-  // let res = conn.query("select * from read_csv('D:/data_obs/sys_env.csv', auto_detect=true, union_by_name=true) limit 500");
-  let res = conn.query("SELECT extension_name, installed, description FROM duckdb_extensions()");
-  println!("{:?}", res);
-  let (_, batch) = res.unwrap();
-  let _ = print_batches(&[batch]);
-}

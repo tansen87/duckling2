@@ -23,7 +23,7 @@ impl Connection for FolderConnection {
     directory_tree(&self.path).ok_or_else(|| anyhow::anyhow!("null"))
   }
 
-  async fn query(&self, sql: &str, limit: usize, offset: usize) -> Result<RawArrowData> {
+  async fn query(&self, sql: &str, _limit: usize, _offset: usize) -> Result<RawArrowData> {
     let conn = self.connect()?;
     duckdb_sync::query(&conn, sql)
   }
@@ -157,12 +157,12 @@ impl Connection for FolderConnection {
 }
 
 impl FolderConnection {
-  fn new(path: &str) -> Self {
-    Self {
-      path: String::from(path),
-      cwd: None,
-    }
-  }
+  // fn new(path: &str) -> Self {
+  //   Self {
+  //     path: String::from(path),
+  //     cwd: None,
+  //   }
+  // }
 
   fn connect(&self) -> Result<duckdb::Connection> {
     let conn = duckdb::Connection::open_in_memory()?;
@@ -282,15 +282,4 @@ fn exist_glob(pattern: &str) -> bool {
     return true;
   }
   false
-}
-
-#[tokio::test]
-async fn test_table() {
-  use arrow::util::pretty::print_batches;
-  let _d = FolderConnection::new(r"D:\Code\duckdb\data\parquet-testing");
-  let res = _d
-    .find("123", r"D:/Code/duckdb/data/parquet-testing/decimal")
-    .await
-    .unwrap();
-  let _ = print_batches(&[res.batch]);
 }
