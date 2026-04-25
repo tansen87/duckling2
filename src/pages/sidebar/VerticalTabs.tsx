@@ -1,9 +1,11 @@
 import { TabItemProps } from '@/components/PageTabs';
 import { Button } from '@/components/ui/button';
+import { SearchInput } from '@/components/custom/search';
 import { cn } from '@/lib/utils';
 import { useTabsStore } from '@/stores/tabs';
 import { XIcon } from 'lucide-react';
 import { useShallow } from 'zustand/shallow';
+import { useState } from 'react';
 import { Container } from './Favorite';
 
 export function Node({
@@ -48,9 +50,24 @@ export function VerticalTabs() {
         ids: s.ids,
       })),
     );
+  const [searchText, setSearchText] = useState('');
+
+  const filteredIds = ids.filter((id) => {
+    if (!searchText.trim()) return true;
+    const tab = tabObj?.[id];
+    return tab?.displayName?.toLowerCase().includes(searchText.toLowerCase());
+  });
+
   return (
     <Container title="Tabs">
-      {ids.map((id, _i) => {
+      <div className="-mt-px">
+        <SearchInput
+          placeholder="Search tabs..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+      {filteredIds.map((id, _i) => {
         return (
           <Node
             key={id}

@@ -1,5 +1,4 @@
 import {
-  Code2,
   DatabaseIcon,
   FolderHeart,
   HistoryIcon,
@@ -69,7 +68,6 @@ export function ASide() {
       <nav className="grid gap-0.5 p-0.5 [&>*]:place-self-center">
         <SideButton id="database" label="Database" icon={DatabaseIcon} />
         <SideButton id="favorite" label="Favorite" icon={FolderHeart} />
-        <SideButton id="code" label="Code" icon={Code2} />
         <SideButton id="history" label="History" icon={HistoryIcon} />
         <SideButton id="tabs" label="Tabs" icon={LayoutPanelLeftIcon} />
       </nav>

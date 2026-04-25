@@ -6,7 +6,7 @@ import classes from '@/hooks/resize.module.css';
 import { Main } from '@/pages/main';
 import DBTree from '@/pages/sidebar';
 import { activeSideAtom, ASide } from '@/pages/sidebar/aside';
-import { Favorite, History, SqlCode } from '@/pages/sidebar/Favorite';
+import { Favorite, History } from '@/pages/sidebar/Favorite';
 import { sizeAtom } from '@/stores/app';
 import { useAtom, useAtomValue } from 'jotai';
 import { BellIcon } from 'lucide-react';
@@ -45,9 +45,6 @@ function Home() {
             </Hidden>
             <Hidden display={activeAside == 'history'}>
               <History />
-            </Hidden>
-            <Hidden display={activeAside == 'code'}>
-              <SqlCode />
             </Hidden>
             <Hidden display={activeAside == 'tabs'}>
               <VerticalTabs />
