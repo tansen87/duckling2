@@ -335,22 +335,6 @@ const CSVForm = () => {
           <div className="flex-1 space-y-4">
             <FormField
               control={form.control}
-              name="delim"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Delim</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Specifies the string that separates columns within each row
-                    (line) of the file.
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
               name="quote"
               render={({ field }) => (
                 <FormItem>

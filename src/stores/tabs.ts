@@ -283,18 +283,11 @@ export function getParams(
   let tableName = ctx.tableName ?? table?.path ?? tableId;
 
   if (tableName.endsWith('.csv')) {
-    const csv = atomStore.get(settingAtom).csv;
-    const params = [`'${tableName}'`, 'auto_detect=true, union_by_name=true'];
-    for (const [key, val] of Object.entries(csv ?? {})) {
-      if (!isEmpty(val)) {
-        params.push(`${key}='${val}'`);
-      }
-    }
-    tableName = `read_csv(${params.join(', ')})`;
+    tableName = `read_csv_auto('${tableName}', union_by_name=true)`;
   } else if (tableName.endsWith('.parquet')) {
     tableName = `read_parquet('${tableName}', union_by_name=true)`;
   } else if (tableName.endsWith('.xlsx')) {
-    tableName = `read_xlsx('${tableName}', ignore_errors=true, all_varchar=true)`;
+    tableName = `read_xlsx('${tableName}', all_varchar=true)`;
   }
 
   return {

@@ -9,7 +9,7 @@ use walkdir::WalkDir;
 
 use crate::dialect::Connection;
 use crate::dialect::duckdb::duckdb_sync;
-use crate::utils::{Metadata, RawArrowData, TreeNode};
+use crate::utils::{detect_separator, Metadata, RawArrowData, TreeNode};
 
 #[derive(Debug, Default)]
 pub struct FolderConnection {
@@ -52,14 +52,16 @@ impl Connection for FolderConnection {
 
       let pattern = format!("{table}/**/*.csv");
       if exist_glob(&pattern) {
-        tmp.push(format!("SELECT '*.csv' as file_type, * FROM (DESCRIBE select * FROM read_csv('{pattern}', union_by_name = true))"));
+        tmp.push(format!("SELECT '*.csv' as file_type, * FROM (DESCRIBE select * FROM read_csv_auto('{pattern}', union_by_name = true))"));
       }
 
       tmp.join("\n union all \n")
     } else if ext == "parquet" {
       format!("DESCRIBE select * from read_parquet('{table}')")
     } else if ext == "csv" {
-      format!("DESCRIBE select * from read_csv('{table}', union_by_name=true)")
+      let sep = detect_separator(table).map_err(|e| anyhow::anyhow!("{e}"))?;
+      let sep_str = String::from(sep as char);
+      format!("DESCRIBE select * from read_csv('{table}', union_by_name=true, sep='{sep_str}')")
     } else {
       String::new()
     };
@@ -114,7 +116,7 @@ impl Connection for FolderConnection {
       let pattern = format!("{table}/**/*.csv");
       if exist_glob(&pattern) {
         tmp.push(format!(
-          "select * FROM read_csv('{pattern}', union_by_name=true, filename=true)"
+          "select * FROM read_csv_auto('{pattern}', union_by_name=true, filename=true)"
         ));
       }
 
@@ -122,7 +124,9 @@ impl Connection for FolderConnection {
     } else if ext == "parquet" {
       format!("select * from read_parquet('{table}', union_by_name=true, filename=true)")
     } else if ext == "csv" {
-      format!("select * from read_csv('{table}', union_by_name=true, filename=true)")
+      let sep = detect_separator(table).map_err(|e| anyhow::anyhow!("{e}"))?;
+      let sep_str = String::from(sep as char);
+      format!("select * from read_csv('{table}', union_by_name=true, filename=true, sep='{sep_str}')")
     } else if ext == "xlsx" {
       format!("select * from read_xlsx('{table}', ignore_errors=true)")
     } else {
